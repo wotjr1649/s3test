@@ -3,7 +3,7 @@ name: React Build and Deploy to S3
 on:
   push:
     branches:
-      - main  # main 브랜치에 푸시될 때만 실행
+      - main
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: 'lts/*'  # 최신 LTS 버전 사용
+        node-version: 'lts/*'
 
     - name: Install dependencies
       run: npm install
@@ -24,22 +24,23 @@ jobs:
     - name: Build project
       run: npm run build
 
-    - name: Deploy to S3
-      uses: jakejarvis/s3-sync-action@master
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
       with:
-        args: --delete
-      env:
-        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}  # S3 버킷 이름
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS Access Key
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS Secret Key
-        AWS_REGION: 'ap-northeast-2'  # S3 버킷의 리전
-        SOURCE_DIR: 'build'  # 빌드된 파일들이 있는 디렉토리
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    - name: Sync S3
+      uses: aws-actions/aws-s3-sync@v1.0.0
+      with:
+        bucket: ${{ secrets.AWS_S3_BUCKET }}
+        source-dir: 'build'
+        destination-dir: '/'
+        delete: true
 
     - name: Invalidate CloudFront Cache
-      uses: chetan/invalidate-cloudfront-action@v1.0.4
+      uses: aws-actions/aws-cloudfront-invalidate-cache-action@v1.0.0
       with:
-        distribution-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}  # CloudFront 분배 ID
-        paths: '/*'  # 무효화할 경로
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        distribution-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        paths: '/*'
