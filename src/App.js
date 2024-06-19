@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { RecoilRoot } from 'recoil'; // RecoilRoot import
-import { userState } from './component/state/atoms.js';
 import DetailPage from './pages/DetailPage.js';
 import HomePage from './pages/HomePage.js';
 import MyPage from './pages/MyPage.js';
